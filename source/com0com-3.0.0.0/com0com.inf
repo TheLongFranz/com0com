@@ -56,7 +56,7 @@ com0com.sys
 ;******************************************************************************
 
 [Manufacturer]
-%VF% = com0com, NTx86, NTia64, NTamd64
+%VF% = com0com, NTx86, NTia64, NTamd64, NTarm64
 
 [com0com]
 %com0com.BusDesc% = com0com_inst, root\com0com
@@ -68,6 +68,9 @@ com0com.sys
 %com0com.BusDesc% = com0com_inst, root\com0com
 
 [com0com.NTamd64]
+%com0com.BusDesc% = com0com_inst, root\com0com
+
+[com0com.NTarm64]
 %com0com.BusDesc% = com0com_inst, root\com0com
 
 ;******************************************************************************

@@ -25,7 +25,7 @@ UninstallInfTag = {df799e12-3c56-421b-b298-b6d3642bc878}
 ;******************************************************************************
 
 [Manufacturer]
-%VF% = com0com, NTx86, NTia64, NTamd64
+%VF% = com0com, NTx86, NTia64, NTamd64, NTarm64
 
 [ControlFlags]
 ExcludeFromSelect = com0com\comport
@@ -41,6 +41,30 @@ ExcludeFromSelect = com0com\comport
 
 [com0com.NTamd64]
 %com0com.PortDesc% = com0com_inst_port, com0com\comport
+
+[com0com.NTarm64]
+%com0com.PortDesc% = com0com_inst_port_arm64, com0com\comport
+
+;******************************************************************************
+;
+; Port install section for ARM64
+;
+; Windows 11 25H2 (build 26200) no longer ships msports.inf, serial.sys or the
+; Serenum service (other recent releases may not either). The generic section
+; below includes SerialEnumerator.NT
+; from msports.inf and adds serenum as an upper filter, so the device would fail
+; to install (CM_PROB_REGISTRY) or to start. The COM port number is still handed
+; out by the Ports class installer (msports.dll, registered by the class itself),
+; and a virtual port has nothing for the serial enumerator to enumerate, so this
+; section leaves both out.
+;
+;******************************************************************************
+
+[com0com_inst_port_arm64]
+AddReg = com0com_AddReg
+
+[com0com_inst_port_arm64.Services]
+AddService = com0com, %SPSVCINST_ASSOCSERVICE%, com0com_Service_Inst, com0com_EventLog_Inst
 
 ;******************************************************************************
 ;

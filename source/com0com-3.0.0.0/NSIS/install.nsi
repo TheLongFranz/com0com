@@ -293,7 +293,11 @@ Name "Null-modem emulator (com0com)"
 OutFile "${OUTPUT_FILE}"
 
 ; The default installation directory
-InstallDir $PROGRAMFILES\com0com
+!ifdef ADD_TARGET_CPU_arm64
+  InstallDir $PROGRAMFILES64\com0com
+!else
+  InstallDir $PROGRAMFILES\com0com
+!endif
 
 ; Registry key to check for directory (so if you install again, it will
 ; overwrite the old one automatically)
@@ -353,16 +357,20 @@ ShowUninstDetails show
 
     ;!Warning "Adding CPU ${cpu}"
 
+    !ifndef CPU_DIR_${cpu}
+      !define CPU_DIR_${cpu} "..\${cpu}"
+    !endif
+
     Section /o "-com0com ${cpu}" sec_com0com_${cpu}
 
       ; Set output path to the installation directory.
       SetOutPath $INSTDIR
 
       ; Put target cpu files there
-      File "..\${cpu}\com0com.sys"
-      File /nonfatal "..\${cpu}\com0com.cat"
-      File "..\${cpu}\setup.dll"
-      File "..\${cpu}\setupc.exe"
+      File "${CPU_DIR_${cpu}}\com0com.sys"
+      File /nonfatal "${CPU_DIR_${cpu}}\com0com.cat"
+      File "${CPU_DIR_${cpu}}\setup.dll"
+      File "${CPU_DIR_${cpu}}\setupc.exe"
 
     SectionEnd
 
@@ -375,6 +383,7 @@ ShowUninstDetails show
 !insertmacro CpuSection i386
 !insertmacro CpuSection amd64
 !insertmacro CpuSection ia64
+!insertmacro CpuSection arm64
 
 ;--------------------------------
 
@@ -390,7 +399,13 @@ Section "com0com" sec_com0com
   File "..\com0com.inf"
   File "..\cncport.inf"
   File "..\comport.inf"
-  File "..\setupg\Release\setupg.exe"
+  !ifndef SETUPG_EXE
+    !define SETUPG_EXE "..\setupg\Release\setupg.exe"
+  !endif
+  File "${SETUPG_EXE}"
+  !ifdef TEST_CERT
+    File "${TEST_CERT}"
+  !endif
 
   WriteUninstaller "uninstall.exe"
 
@@ -436,6 +451,14 @@ Section "com0com" sec_com0com
   WriteRegStr HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\com0com" "QuietUninstallString" '"$INSTDIR\uninstall.exe" /S'
   WriteRegDWORD HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\com0com" "NoModify" 1
   WriteRegDWORD HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\com0com" "NoRepair" 1
+
+  !ifdef TEST_CERT
+    ; Test-signed driver: its certificate must be trusted (needs test signing mode, checked in .onInit).
+    nsExec::ExecToLog 'certutil -f -addstore Root "$INSTDIR\com0com-test.cer"'
+    Pop $0
+    nsExec::ExecToLog 'certutil -f -addstore TrustedPublisher "$INSTDIR\com0com-test.cer"'
+    Pop $0
+  !endif
 
   ReadEnvStr $0 "CNC_INSTALL_SKIP_SETUP_PREINSTALL"
   StrCpy $0 $0 1
@@ -507,9 +530,36 @@ SectionEnd
 
 Function .onInit
 
+  !ifdef ADD_TARGET_CPU_arm64
+    SetRegView 64
+  !endif
+
   ; Check CPU
 
-  ${If} ${RunningX64}
+  ${If} ${IsNativeARM64}
+    !ifdef ADD_TARGET_CPU_arm64
+      SectionGetFlags ${sec_com0com_arm64} $0
+      IntOp $0 $0 | ${SF_SELECTED}
+      SectionSetFlags ${sec_com0com_arm64} $0
+      !ifdef TEST_CERT
+        ; A test-signed driver only loads while Windows runs in test-signing mode.
+        ${DisableX64FSRedirection}
+        nsExec::ExecToStack 'cmd /c "bcdedit /enum {current} | findstr /i /r /c:"^testsigning  *Yes""'
+        Pop $0
+        Pop $1
+        ${EnableX64FSRedirection}
+        ${If} $0 != 0
+          MessageBox MB_OK|MB_ICONSTOP "This package contains a test-signed driver, which needs Windows test-signing mode.$\n$\nRun as administrator:  bcdedit /set testsigning on$\nthen restart Windows and run this setup again." /SD IDOK
+          Abort
+        ${EndIf}
+      !endif
+    !else
+      MessageBox MB_YESNO|MB_DEFBUTTON2|MB_ICONEXCLAMATION \
+        "This package does not include ARM64 driver required for your system.$\n$\nContinue?" \
+        /SD IDNO IDYES +2
+      Abort
+    !endif
+  ${ElseIf} ${RunningX64}
     !ifdef ADD_TARGET_CPU_amd64
       SectionGetFlags ${sec_com0com_amd64} $0
       IntOp $0 $0 | ${SF_SELECTED}
@@ -580,6 +630,12 @@ FunctionEnd
 
 ; Uninstaller
 
+!ifdef ADD_TARGET_CPU_arm64
+  Function un.onInit
+    SetRegView 64
+  FunctionEnd
+!endif
+
 Section "Uninstall"
 
   ; Set output path to the installation directory.
@@ -615,6 +671,7 @@ Section "Uninstall"
   Delete $INSTDIR\setup.dll
   Delete $INSTDIR\setupc.exe
   Delete $INSTDIR\setupg.exe
+  Delete $INSTDIR\com0com-test.cer
   Delete $INSTDIR\uninstall.exe
 
   ; Remove shortcuts, if any

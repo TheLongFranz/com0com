@@ -25,7 +25,7 @@ UninstallInfTag = {df799e12-3c56-421b-b298-b6d3642bc878}
 ;******************************************************************************
 
 [Manufacturer]
-%VF% = com0com, NTx86, NTia64, NTamd64
+%VF% = com0com, NTx86, NTia64, NTamd64, NTarm64
 
 [ControlFlags]
 ExcludeFromSelect = com0com\cncport
@@ -40,6 +40,9 @@ ExcludeFromSelect = com0com\cncport
 %com0com.PortDesc% = com0com_inst_port, com0com\cncport
 
 [com0com.NTamd64]
+%com0com.PortDesc% = com0com_inst_port, com0com\cncport
+
+[com0com.NTarm64]
 %com0com.PortDesc% = com0com_inst_port, com0com\cncport
 
 ;******************************************************************************

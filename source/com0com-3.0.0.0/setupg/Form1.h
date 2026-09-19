@@ -625,7 +625,7 @@ namespace SetupApp {
         DeclareControlPair(TextBox, PortName)
         DeclareControlPair(CheckBox, UsePortsClass)
 
-        Void PortName_GetCurrent(int i, String ^&name, bool &enabled, bool &checked) {
+        Void PortName_GetCurrent(int i, String ^%name, bool %enabled, bool %checked) {
           try {
             name = pairs[pairList->SelectedNode->Name][i][(gcnew String("PortName"))->ToLower()];
 
@@ -789,7 +789,7 @@ namespace SetupApp {
               pairExpand = true;
             }
 
-            bool portExpand[2];
+            array<bool> ^portExpand = gcnew array<bool>(2);
 
             for (int i = 0 ; i < 2 ; i++) {
               try {
