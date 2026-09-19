@@ -7,6 +7,17 @@ and the companion **hub4com** 2.0.0.0. Everything is built without the legacy DD
 The upstream sources are unchanged apart from the small edits listed under
 [Differences from upstream](#differences-from-upstream-3000).
 
+## Credits and AI disclosure
+
+com0com and hub4com were written by **Vyacheslav Frolov** and are released under the GNU General Public License
+(`license.txt`); the original project is at <http://com0com.sourceforge.net/>. This folder is his code plus the ARM64
+changes described below.
+
+The ARM64 support was **developed with Claude Code** (Anthropic's AI coding assistant), directed by the repository
+owner: the INF changes, the build, install and test scripts, the test tools, the installer changes and this
+documentation. It was tested on a single Windows 11 ARM64 virtual machine (see [Test results](#test-results) and
+[Known limitations](#known-limitations-and-things-to-know)).
+
 ## Contents
 
 | Output (`arm64\`)                       | What it is |
